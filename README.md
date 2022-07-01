@@ -103,7 +103,7 @@ void Func2(u8 *in, u8 *out)
 ```
 ### s-box
 ref. 상위 4 bit, 하위 4 bit로 나누어 2번 lookup 후 shift  
-opt. 8bit로 1번 loopup
+opt. 8bit로 1번 lookup
 추가 메모리 +240B
  
 ### permutation
