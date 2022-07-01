@@ -14,6 +14,7 @@
 | ```Func1```    | 460      | 3          |
 | ```Func2```    | 8852     | 58         |
 | ```matching``` | 33       | 0.2        |
+
 Bottlenecks: ```int_to_char, Func2```
 
 ## Profiling using clock (opt. code)
