@@ -1,7 +1,9 @@
 #pragma GCC optimize("-O3")
+
 // type definition
 typedef unsigned char u8;
 typedef unsigned short u16;
+
 // rotation left function
 #define ROL(X, Y) ((X << Y) | (X >> (8 - Y)))      // optimization
 #define ROL_4BIT(X, Y) ((X << Y) | (X >> (4 - Y))) // optimization
@@ -9,10 +11,13 @@ typedef unsigned short u16;
 #define T2(F, G, H) (F ^ G ^ H)
 #define DATA_SIZE 4
 #define SIZE_TEXT 32
+
 u8 init_constant[8] = {0xAA, 0x11, 0xBB, 0x22, 0xCC, 0x33, 0xDD, 0x44};
 u8 init_constant2[4] = {0x12, 0x34, 0x56, 0x78};
+
 // https://eprint.iacr.org/2017/622.pdf (GIFT block cipher)
 u32 s_box[16] = {0x1, 0xa, 0x4, 0xc, 0x6, 0xf, 0x3, 0x9, 0x2, 0xd, 0xb, 0x7, 0x5, 0x0, 0x8, 0xe};
+
 void byte_permutation(u8 *inout)
 {
     u8 tmp;
@@ -26,6 +31,7 @@ void byte_permutation(u8 *inout)
     inout[1] = inout[0];
     inout[0] = tmp;
 }
+
 void Func1(u8 *in, u8 *out)
 {
     u32 i = 0;
@@ -54,6 +60,7 @@ void Func1(u8 *in, u8 *out)
         out[i] = func1_tmp[i] ^ func1_tmp[i + 4];
     }
 }
+
 void byte_to_bit(u8 *in, u8 *out, u32 size_bit)
 {
     u32 size_byte = size_bit / 8;
@@ -76,6 +83,7 @@ void byte_to_bit(u8 *in, u8 *out, u32 size_bit)
         }
     }
 }
+
 void bit_to_byte(u8 *in, u8 *out, u32 size_bit)
 {
     u32 size_byte = size_bit / 8;
@@ -89,6 +97,7 @@ void bit_to_byte(u8 *in, u8 *out, u32 size_bit)
         }
     }
 }
+
 void PERMUTATE_FUNC(u8 *in, u8 *out)
 {
     u8 text_tmp[SIZE_TEXT];
@@ -105,6 +114,7 @@ void PERMUTATE_FUNC(u8 *in, u8 *out)
         out[i] = text_tmp[i];
     }
 }
+
 void Func2(u8 *in, u8 *out)
 {
     u8 func2_tmp[4] = {
@@ -150,6 +160,7 @@ void Func2(u8 *in, u8 *out)
     out[2] = func2_tmp[2];
     out[3] = func2_tmp[3];
 }
+
 u8 Matching(u8 *in1, u8 *in2)
 {
     int i;
@@ -164,6 +175,7 @@ u8 Matching(u8 *in1, u8 *in2)
     }
     return flag;
 }
+
 void int_to_char(u32 in, u8 *out)
 {
     int i = 0;
@@ -180,6 +192,7 @@ void int_to_char(u32 in, u8 *out)
         out[i] = out[i] + 48;
     }
 }
+
 u8 Cracking(u32 init_int, u8 *password, u8 *output, u8 *answer)
 {
     u8 check;
@@ -189,6 +202,7 @@ u8 Cracking(u32 init_int, u8 *password, u8 *output, u8 *answer)
     check = Matching(output, answer);
     return check;
 }
+
 void setup()
 {
     Serial.begin(9600); // open the serial port at 9600 bps:
@@ -250,6 +264,7 @@ void setup()
     Serial.println((time2 - time1));
     Serial.println("-----------------");
 }
+
 void loop()
 {
 }
