@@ -5,7 +5,7 @@
 ## Improvement
 | Ref. Code | Opt. code |
 | --------- | --------- |
-| 15399ms   | 4144ms    |
+| 15399ms   | 1927ms    |
 
 ## Profiling using clock (ref. code)
 | function       | time(ms) | percentage |
@@ -20,40 +20,33 @@ Bottlenecks: ```int_to_char, Func2```
 ## Profiling using clock (opt. code)
 | function       | time(ms) | percentage |
 | --------       | -------- | ---------- |
-| ```int_to_char``` | 2340  | 56         |
-| ```Func1```    | 176      | 4          |
-| ```Func2```    | 1646     | 39         |
-| ```matching``` | 33       | 0.7        |
+| ```int_to_char``` | 146   | 7.3        |
+| ```Func1```    | 179      | 8.9        |
+| ```Func2```    | 1656     | 82         |
+| ```matching``` | 32       | 1.6        |
 
 # Major changes
 ## ```int_to_char```
 ```c
-const char digit_pairs[201] = {
-    "00102030405060708090"
-    "01112131415161718191"
-    "02122232425262728292"
-    "03132333435363738393"
-    "04142434445464748494"
-    "05152535455565758595"
-    "06162636465666768696"
-    "07172737475767778797"
-    "08182838485868788898"
-    "09192939495969798999"};
-
-
 // converts 8 digit decimal integer to ascii string
 void int_to_char(u32 in, u8 *out)
 {
     // ...
-    for (int i = 0; i < 8; i += 2, in /= 100)
+    digit = 0;
+    if (in > 9999999)
     {
-        offset = in % 100;
-        *(short *)(out + i) = *(short *)(digit_pairs + (offset << 1));
+        digit = in < 50000000
+                    ? (in < 30000000 ? (in < 20000000 ? 1 : 2) : (in < 40000000 ? 3 : 4))
+                    : (in < 80000000 ? (in < 60000000 ? 5 : (in < 70000000 ? 6 : 7)) : (in < 90000000 ? 8 : 9));
+        in -= digit * 10000000;
     }
+    out[7] = digit + '0';
+    //...
 }
 ```
-8자리 10진수의 각 2자리마다 lookup table 사용하여 변환  
-추가 메모리 +201B
+avr은 DIV 연산을 지원하지 않음  
+branching 사용하여 최적화  
+```in```이 충분히 작다면 ```u16, u8```로 cast하여 비교 연산 최적화
 
 ## ```Func1```
 ```c
