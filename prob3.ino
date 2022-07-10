@@ -17,7 +17,7 @@ u8 init_constant2[4] = {0x12, 0x34, 0x56, 0x78};
 
 // https://eprint.iacr.org/2017/622.pdf (GIFT block cipher)
 u32 s_box[16] = {0x1, 0xa, 0x4, 0xc, 0x6, 0xf, 0x3, 0x9, 0x2, 0xd, 0xb, 0x7, 0x5, 0x0, 0x8, 0xe};
-const u32 calculated_s_box[256] = {
+const u8 calculated_s_box[256] = {
     0x11, 0x1a, 0x14, 0x1c, 0x16, 0x1f, 0x13, 0x19, 0x12, 0x1d, 0x1b, 0x17, 0x15, 0x10, 0x18, 0x1e,
     0xa1, 0xaa, 0xa4, 0xac, 0xa6, 0xaf, 0xa3, 0xa9, 0xa2, 0xad, 0xab, 0xa7, 0xa5, 0xa0, 0xa8, 0xae,
     0x41, 0x4a, 0x44, 0x4c, 0x46, 0x4f, 0x43, 0x49, 0x42, 0x4d, 0x4b, 0x47, 0x45, 0x40, 0x48, 0x4e,
@@ -34,6 +34,9 @@ const u32 calculated_s_box[256] = {
     0x01, 0x0a, 0x04, 0x0c, 0x06, 0x0f, 0x03, 0x09, 0x02, 0x0d, 0x0b, 0x07, 0x05, 0x00, 0x08, 0x0e,
     0x81, 0x8a, 0x84, 0x8c, 0x86, 0x8f, 0x83, 0x89, 0x82, 0x8d, 0x8b, 0x87, 0x85, 0x80, 0x88, 0x8e,
     0xe1, 0xea, 0xe4, 0xec, 0xe6, 0xef, 0xe3, 0xe9, 0xe2, 0xed, 0xeb, 0xe7, 0xe5, 0xe0, 0xe8, 0xee};
+
+
+u8 check_flag = 0;
 
 // 0x76543210 -> 0x65432107
 void byte_permutation(u8 *inout)
@@ -85,43 +88,6 @@ void Func1(u8 *in, u8 *out)
         out[i] = func1_tmp[i] ^ func1_tmp[i + 4];
     }
 }
-
-// void byte_to_bit(u8 *in, u8 *out, u32 size_bit)
-// {
-//     u32 size_byte = size_bit / 8;
-//     u32 i, j;
-//     u8 bit_selector = 1;
-//     for (i = 0; i < size_byte; i++)
-//     {
-//         bit_selector = 1;
-//         for (j = 0; j < 8; j++)
-//         {
-//             if (in[i] & bit_selector)
-//             {
-//                 out[i * 8 + j] = 1;
-//             }
-//             else
-//             {
-//                 out[i * 8 + j] = 0;
-//             }
-//             bit_selector = bit_selector << 1;
-//         }
-//     }
-// }
-
-// void bit_to_byte(u8 *in, u8 *out, u32 size_bit)
-// {
-//     u32 size_byte = size_bit / 8;
-//     u32 i, j;
-//     for (i = 0; i < size_byte; i++)
-//     {
-//         out[i] = 0;
-//         for (j = 0; j < 8; j++)
-//         {
-//             out[i] = out[i] + (in[i * 8 + j] << j);
-//         }
-//     }
-// }
 
 // void PERMUTATE_FUNC(u8 *in, u8 *out)
 // {
@@ -212,13 +178,7 @@ void Func2(u8 *in, u8 *out)
     u8 func2_key[4] = {
         0,
     };
-    // u8 func2_bit_tmp1[32] = {
-    //     0,
-    // };
-    // u8 func2_bit_tmp2[32] = {
-    //     0,
-    // };
-    u8 tmp1, tmp2;
+
     u8 cnt;
     int i, j = 0;
     func2_key[0] = in[0] ^ 0x12;
@@ -236,15 +196,8 @@ void Func2(u8 *in, u8 *out)
         for (j = 0; j < 4; j++)
         {
             func2_key[j] = func2_key[j] ^ cnt;
-            // tmp1 = s_box[(func2_tmp[j] & 0xF)];
-            // tmp2 = s_box[((func2_tmp[j] >> 4) & 0xF)];
-            // func2_tmp[j] = (tmp1 + (tmp2 << 4)) ^ func2_key[j];
             func2_tmp[j] = calculated_s_box[func2_tmp[j]] ^ func2_key[j];
         }
-
-        // byte_to_bit(func2_tmp, func2_bit_tmp1, DATA_SIZE * 8);
-        // PERMUTATE_FUNC(func2_bit_tmp1, func2_bit_tmp2);
-        // bit_to_byte(func2_bit_tmp2, func2_tmp, DATA_SIZE * 8);
 
         // byte-to-byte permutation
         permutate_func(func2_tmp, func2_tmp_aux);
@@ -256,22 +209,20 @@ void Func2(u8 *in, u8 *out)
     out[3] = func2_tmp[3];
 }
 
-u8 Matching(u8 *in1, u8 *in2)
+u8 matching(u8 *in1, u8 *in2, u8 ret_true)
 {
     int i;
-    u8 flag = 1;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 4; i++)
     {
         if (in1[i] != in2[i])
         {
-            flag = 0;
-            return flag;
+            return 0;
         }
     }
-    return flag;
+    return ret_true;
 }
 
-// converts 4 digit unsigned decimal integer to ascii string
+// converts 8 digit unsigned decimal integer to ascii string
 void int_to_char(u32 in, u8 *out)
 {
     u8 l, digit;
@@ -354,12 +305,34 @@ void int_to_char(u32 in, u8 *out)
 
 u8 Cracking(u32 init_int, u8 *password, u8 *output, u8 *answer)
 {
-    u8 check;
+    u8 check_l = check_flag & 0x01;
+    u8 check_h = check_flag & 0x02;
+
     int_to_char(init_int, password);
-    Func1(password, output);
-    Func2(&password[4], &output[4]);
-    check = Matching(output, answer);
-    return check;
+
+    if (!check_l)
+    {
+        Func1(password, output);
+        check_l = matching(output, answer, 1);
+    }
+
+    if (!check_h)
+    {
+        Func2(&password[4], &output[4]);
+        check_h = matching(&output[4], &answer[4], 2);
+    }
+
+    check_flag = check_h + check_l;
+
+    return check_l && check_h;
+}
+
+void encrypt(u32 plaintext, u8 *ciphertext)
+{
+    u8 password[8];
+    int_to_char(plaintext, password);
+    Func1(password, ciphertext);
+    Func2(&password[4], &ciphertext[4]);
 }
 
 void setup()
@@ -401,23 +374,31 @@ void setup()
     u32 time2;
     time1 = millis();
 
-    init_int = 0;
-    for (i = 0; i < 99999999; i++)
+    u32 step = 10001;
+
+    check_flag = 0;
+
+    for (init_int = 0; init_int <= 99999999; init_int += step)
     {
         check = Cracking(init_int, password, output, answer_bench);
-        if (check)
+        switch (check_flag)
         {
+        case 1:
+            step = 10000;
+            break;
+        case 2:
+            step = 1;
+            break;
+        case 3:
             Serial.print("Answer is ");
             Serial.println(init_int);
+            goto found;
+            break;
+        default:
             break;
         }
-
-        for (j = 0; j < 8; j++)
-        {
-            output[j] = 0;
-        }
-        init_int++;
     }
+found:
     time2 = millis();
     Serial.print(">> ");
     Serial.println((time2 - time1));
