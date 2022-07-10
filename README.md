@@ -2,12 +2,12 @@
 3번 문제 풀이
 
 # Benchmark time
-## Improvement
+## Improvement (answer = 12345)
 | Ref. Code | Opt. code |
 | --------- | --------- |
-| 15399ms   | 1927ms    |
+| 15399ms   | 70ms      |
 
-## Profiling using clock (ref. code)
+## Profiling using clock (ref. code, answer = 12345)
 | function       | time(ms) | percentage |
 | --------       | -------- | ---------- |
 | ```int_to_char``` | 5975  | 39         |
@@ -17,13 +17,12 @@
 
 Bottlenecks: ```int_to_char, Func2```
 
-## Profiling using clock (opt. code)
+## Profiling using clock (opt. code, answer = 99999999)
 | function       | time(ms) | percentage |
 | --------       | -------- | ---------- |
-| ```int_to_char``` | 146   | 7.3        |
-| ```Func1```    | 179      | 8.9        |
-| ```Func2```    | 1656     | 82         |
-| ```matching``` | 32       | 1.6        |
+| ```int_to_char``` | 195   | 13         |
+| ```Func1```    | 175      | 11         |
+| ```Func2```    | 1186     | 76         |
 
 # Major changes
 ## ```int_to_char```
@@ -50,7 +49,7 @@ branching 사용하여 최적화
 
 ## ```Func1```
 ```c
-// Func1: 8 bytes -> 8 bytes
+// Func1: 4 bytes -> 4 bytes
 void Func1(u8 *in, u8 *out)
 {
     // ...
@@ -124,3 +123,64 @@ void permutate_func(u8 *in, u8 *out)
     *(u32 *)out = out_32;
 }
 ```
+
+## ```Cracking```
+```c
+u8 Cracking(u32 init_int, u8 *password, u8 *output, u8 *answer)
+{
+    u8 check_l = check_flag & 0x01;
+    u8 check_h = check_flag & 0x02;
+
+    int_to_char(init_int, password);
+
+    if (!check_l)
+    {
+        Func1(password, output);
+        check_l = matching(output, answer, 1);
+    }
+
+    if (!check_h)
+    {
+        Func2(&password[4], &output[4]);
+        check_h = matching(&output[4], &answer[4], 2);
+    }
+
+    check_flag = check_h + check_l;
+
+    return check_l && check_h;
+}
+```
+```Func1```은 ```password```의 아래 4자리, ```Func2```는 ```password```의 위 4자리를 사용  
+전역 변수 ```check_flag``` 설정
+
+## ```setup```
+```c
+    // ...
+    u32 step = 10001;
+
+    check_flag = 0;
+
+    for (init_int = 0; init_int <= 99999999; init_int += step)
+    {
+        check = Cracking(init_int, password, output, answer_bench);
+        switch (check_flag)
+        {
+        case 1: // Func1 cracking finished
+            step = 10000;
+            break;
+        case 2: // Func2 cracking finished
+            step = 1;
+            break;
+        case 3: // Cracking finished
+            Serial.print("Answer is ");
+            Serial.println(init_int);
+            goto found;
+            break;
+        default:
+            break;
+        }
+    }
+found:
+    // ...
+```
+```Cracking```이 변경하는 ```check_flag```를 사용하여 병렬화  
