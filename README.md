@@ -3,9 +3,9 @@
 
 # Benchmark time
 ## Improvement (answer = 12345)
-| Ref. Code | Opt. code |
-| --------- | --------- |
-| 15399ms   | 70ms      |
+| Ref. Code | Opt. code | Bitslice |
+| --------- | --------- | -------- |
+| 15399ms   | 70ms      | 89ms     |
 
 ## Profiling using clock (ref. code, answer = 12345)
 | function       | time(ms) | percentage |
@@ -23,6 +23,17 @@ Bottlenecks: ```int_to_char, Func2```
 | ```int_to_char``` | 195   | 13         |
 | ```Func1```    | 175      | 11         |
 | ```Func2```    | 1186     | 76         |
+
+## Profiling using clock (Bitslice, func2, answer = 99999999)
+| operation      | time(ms)    | percentage |
+| -------------  | ----------- | ---------- |
+| ```convert key```     | 24   | 0.64       |
+| ```setup parallel```  | 12   | 0.32       |
+| ```convert data```    | 483  | 13         |
+| ```increase cnt```    | 126  | 3.3        |
+| ```xor```             | 1685 | 45         |
+| ```s_box```           | 687  | 18         |
+| ```permutate```       | 747  | 20         |
 
 # Major changes
 ## ```int_to_char```
